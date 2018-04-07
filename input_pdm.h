@@ -1,5 +1,5 @@
 /* Audio Library for Teensy 3.X
- * Copyright (c) 2014, Paul Stoffregen, paul@pjrc.com
+ * Copyright (c) 2018, Paul Stoffregen, paul@pjrc.com
  *
  * Development of this audio library was funded by PJRC.COM, LLC by sales of
  * Teensy and Audio Adaptor boards.  Please support PJRC's efforts to develop
@@ -24,62 +24,25 @@
  * THE SOFTWARE.
  */
 
-#ifndef mixer_h_
-#define mixer_h_
+#ifndef _input_pdm_h_
+#define _input_pdm_h_
 
 #include "Arduino.h"
 #include "AudioStream.h"
+#include "DMAChannel.h"
 
-class AudioMixer4 : public AudioStream
-{
-#if defined(KINETISK)
-public:
-	AudioMixer4(void) : AudioStream(4, inputQueueArray) {
-		for (int i=0; i<4; i++) multiplier[i] = 65536;
-	}
-	virtual void update(void);
-	void gain(unsigned int channel, float gain) {
-		if (channel >= 4) return;
-		if (gain > 32767.0f) gain = 32767.0f;
-		else if (gain < -32767.0f) gain = -32767.0f;
-		multiplier[channel] = gain * 65536.0f; // TODO: proper roundoff?
-	}
-private:
-	int32_t multiplier[4];
-	audio_block_t *inputQueueArray[4];
-
-#elif defined(KINETISL)
-public:
-	AudioMixer4(void) : AudioStream(4, inputQueueArray) {
-		for (int i=0; i<4; i++) multiplier[i] = 256;
-	}
-	virtual void update(void);
-	void gain(unsigned int channel, float gain) {
-		if (channel >= 4) return;
-		if (gain > 127.0f) gain = 127.0f;
-		else if (gain < -127.0f) gain = -127.0f;
-		multiplier[channel] = gain * 256.0f; // TODO: proper roundoff?
-	}
-private:
-	int16_t multiplier[4];
-	audio_block_t *inputQueueArray[4];
-#endif
-};
-
-class AudioAmplifier : public AudioStream
+class AudioInputPDM : public AudioStream
 {
 public:
-	AudioAmplifier(void) : AudioStream(1, inputQueueArray), multiplier(65536) {
-	}
+	AudioInputPDM(void) : AudioStream(0, NULL) { begin(); }
 	virtual void update(void);
-	void gain(float n) {
-		if (n > 32767.0f) n = 32767.0f;
-		else if (n < -32767.0f) n = -32767.0f;
-		multiplier = n * 65536.0f;
-	}
+	void begin(void);
+protected:	
+	static bool update_responsibility;
+	static DMAChannel dma;
+	static void isr(void);
 private:
-	int32_t multiplier;
-	audio_block_t *inputQueueArray[1];
+	static audio_block_t *block_left;
 };
 
 #endif
