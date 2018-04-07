@@ -81,6 +81,7 @@
 #include "effect_midside.h"
 #include "effect_reverb.h"
 #include "effect_freeverb.h"
+#include "effect_gate.h"
 #include "effect_waveshaper.h"
 #include "effect_granular.h"
 #include "effect_combine.h"
