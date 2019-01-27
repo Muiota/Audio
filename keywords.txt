@@ -21,6 +21,7 @@ AudioControlWM8731master	KEYWORD2
 AudioControlAK4558	KEYWORD2
 AudioControlCS4272	KEYWORD2
 AudioControlCS42448	KEYWORD2
+AudioControlTLV320AIC3206	KEYWORD2
 AudioMemory	KEYWORD2
 
 AudioAnalyzeFFT256	KEYWORD2
@@ -72,6 +73,7 @@ AudioSynthNoiseWhite	KEYWORD2
 AudioSynthNoisePink	KEYWORD2
 AudioSynthKarplusStrong	KEYWORD2
 AudioSynthSimpleDrum	KEYWORD2
+AudioSynthWavetable	KEYWORD2
 isPlaying	KEYWORD2
 positionMillis	KEYWORD2
 lengthMillis	KEYWORD2
@@ -88,6 +90,8 @@ setLowpass	KEYWORD2
 setHighpass	KEYWORD2
 setBandpass	KEYWORD2
 setNotch	KEYWORD2
+setLowShelf	KEYWORD2
+setHighShelf	KEYWORD2
 muteOutput	KEYWORD2
 unmuteOutput	KEYWORD2
 muteInput	KEYWORD2
@@ -178,6 +182,10 @@ pitchMod	KEYWORD2
 shape	KEYWORD2
 frequencyModulation	KEYWORD2
 phaseModulation	KEYWORD2
+setInstrument	KEYWORD2
+playFrequency	KEYWORD2
+playNote	KEYWORD2
+setFrequency	KEYWORD2
 
 AudioMemoryUsage	KEYWORD2
 AudioMemoryUsageMax	KEYWORD2
