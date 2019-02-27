@@ -96,6 +96,7 @@
 #include "input_tdm.h"
 #include "input_pdm.h"
 #include "mixer.h"
+#include "mixer8.h"
 #include "output_dac.h"
 #include "output_dacs.h"
 #include "output_i2s.h"
