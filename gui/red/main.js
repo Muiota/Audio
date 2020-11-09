@@ -60,7 +60,7 @@ var RED = (function() {
 			nns.sort(function(a,b){ return (a.x + a.y/250) - (b.x + b.y/250); });
 			//console.log(JSON.stringify(nns));
 
-			var cpp = "#include <Audio.h>\n#include <i2c_t3.h>\n"
+			var cpp = "#include <Audio.h>\n#include <Wire.h>\n"
 				+ "#include <SPI.h>\n#include <SD.h>\n#include <SerialFlash.h>\n\n"
 				+ "// GUItool: begin automatically generated code\n";
 			// generate code for all audio processing nodes
@@ -241,6 +241,10 @@ var RED = (function() {
 		var server = false && patt.test(location.protocol);
 
 		if (!server) {
+			
+			var metaData = $.parseJSON($("script[data-container-name|='InputOutputCompatibilityMetadata']").html());
+			requirements = metaData["requirements"];
+			
 			var data = $.parseJSON($("script[data-container-name|='NodeDefinitions']").html());
 			var nodes = data["nodes"];
 			$.each(nodes, function (key, val) {

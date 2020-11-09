@@ -29,7 +29,7 @@
 
 #include <Arduino.h>
 #include "control_cs4272.h"
-#include "i2c_t3.h"
+#include "Wire.h"
 
 #define CS4272_ADDR 0x10 // TODO: need to double check
 

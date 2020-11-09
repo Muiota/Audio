@@ -24,46 +24,50 @@
  * THE SOFTWARE.
  */
 
-#ifndef mixer8_h_
-#define mixer8_h_
+#if defined(__IMXRT1052__) || defined(__IMXRT1062__)
+#ifndef output_i2s2_h_
+#define output_i2s2_h_
 
 #include "Arduino.h"
 #include "AudioStream.h"
+#include "DMAChannel.h"
 
-class AudioMixer8 : public AudioStream
+
+class AudioOutputI2S2 : public AudioStream
 {
-#if defined(KINETISK)
 public:
-	AudioMixer8(void) : AudioStream(8, inputQueueArray) {
-		for (int i=0; i<8; i++) multiplier[i] = 65536;
-	}
+	AudioOutputI2S2(void) : AudioStream(2, inputQueueArray) { begin(); }
 	virtual void update(void);
-	void gain(unsigned int channel, float gain) {
-		if (channel >= 8) return;
-		if (gain > 32767.0f) gain = 32767.0f;
-		else if (gain < -32767.0f) gain = -32767.0f;
-		multiplier[channel] = gain * 65536.0f; // TODO: proper roundoff?
-	}
+	void begin(void);
+	friend class AudioInputI2S2;
+protected:
+	AudioOutputI2S2(int dummy): AudioStream(2, inputQueueArray) {} // to be used only inside AudioOutputI2Sslave !!
+	static void config_i2s(void);
+	static audio_block_t *block_left_1st;
+	static audio_block_t *block_right_1st;
+	static bool update_responsibility;
+	static DMAChannel dma;
+	static void isr(void);
 private:
-	int32_t multiplier[8];
-	audio_block_t *inputQueueArray[8];
-
-#elif defined(KINETISL)
-public:
-	AudioMixer8(void) : AudioStream(8, inputQueueArray) {
-		for (int i=0; i<8; i++) multiplier[i] = 256;
-	}
-	virtual void update(void);
-	void gain(unsigned int channel, float gain) {
-		if (channel >= 8) return;
-		if (gain > 127.0f) gain = 127.0f;
-		else if (gain < -127.0f) gain = -127.0f;
-		multiplier[channel] = gain * 256.0f; // TODO: proper roundoff?
-	}
-private:
-	int16_t multiplier[8];
-	audio_block_t *inputQueueArray[8];
-#endif
+	static audio_block_t *block_left_2nd;
+	static audio_block_t *block_right_2nd;
+	static uint16_t block_left_offset;
+	static uint16_t block_right_offset;
+	audio_block_t *inputQueueArray[2];
 };
 
+
+class AudioOutputI2S2slave : public AudioOutputI2S2
+{
+public:
+	AudioOutputI2S2slave(void) : AudioOutputI2S2(0) { begin(); } ;
+	void begin(void);
+	friend class AudioInputI2S2slave;
+	friend void dma_ch0_isr(void);
+protected:
+	static void config_i2s(void);
+};
+
+
 #endif
+#endif //defined(__IMXRT1062__)

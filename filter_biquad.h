@@ -51,110 +51,101 @@ public:
 		setCoefficients(stage, coef);
 	}
 
-	/*
-	  #define FILTER_LOPASS 0
-  #define FILTER_HIPASS 1
-  #define FILTER_BANDPASS 2
-  #define FILTER_NOTCH 3
-  #define FILTER_PARAEQ 4
-  #define FILTER_LOSHELF 5
-  #define FILTER_HISHELF 6
-	*/
-	
 	// Compute common filter functions
 	// http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
 	void setLowpass(uint32_t stage, float frequency, float q = 0.7071) {
 		int coef[5];
-		calcBiquad(0, frequency, 0, q, coef);
-		setCoefficients(stage, coef);
-	}
-	void setHighpass(uint32_t stage, float frequency, float q = 0.7071) {
-		int coef[5];
-		calcBiquad(1, frequency, 0, q, coef);
-		setCoefficients(stage, coef);
-	}
-	void setBandpass(uint32_t stage, float frequency, float q = 1.0) {
-		int coef[5];
-		calcBiquad(2, frequency, 0, q, coef);
-		setCoefficients(stage, coef);
-	}
-	void setNotch(uint32_t stage, float frequency, float q = 1.0) {
-		int coef[5];
-		calcBiquad(3, frequency, 0, q, coef);
-		setCoefficients(stage, coef);
-	}
-	void setLowShelf(uint32_t stage, float frequency, float gain, float slope = 1.0f) {
-		int coef[5];
-		calcBiquad(5, frequency, gain, slope, coef);
-		setCoefficients(stage, coef);
-	}
-	void setHighShelf(uint32_t stage, float frequency, float gain, float slope = 1.0f) {
-		int coef[5];
-		calcBiquad(6, frequency, gain, slope, coef);
-		setCoefficients(stage, coef);
-	}
-	
-	static void calcBiquad(uint8_t filtertype, float freq, float gain, float q, int *coef)
-	{
-		double w0 = freq * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
 		double sinW0 = sin(w0);
 		double alpha = sinW0 / ((double)q * 2.0);
 		double cosW0 = cos(w0);
 		double scale = 1073741824.0 / (1.0 + alpha);
+		/* b0 */ coef[0] = ((1.0 - cosW0) / 2.0) * scale;
+		/* b1 */ coef[1] = (1.0 - cosW0) * scale;
+		/* b2 */ coef[2] = coef[0];
+		/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
+		/* a2 */ coef[4] = (1.0 - alpha) * scale;
+		setCoefficients(stage, coef);
+	}
+	void setHighpass(uint32_t stage, float frequency, float q = 0.7071) {
+		int coef[5];
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double sinW0 = sin(w0);
+		double alpha = sinW0 / ((double)q * 2.0);
+		double cosW0 = cos(w0);
+		double scale = 1073741824.0 / (1.0 + alpha);
+		/* b0 */ coef[0] = ((1.0 + cosW0) / 2.0) * scale;
+		/* b1 */ coef[1] = -(1.0 + cosW0) * scale;
+		/* b2 */ coef[2] = coef[0];
+		/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
+		/* a2 */ coef[4] = (1.0 - alpha) * scale;
+		setCoefficients(stage, coef);
+	}
+	void setBandpass(uint32_t stage, float frequency, float q = 1.0) {
+		int coef[5];
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double sinW0 = sin(w0);
+		double alpha = sinW0 / ((double)q * 2.0);
+		double cosW0 = cos(w0);
+		double scale = 1073741824.0 / (1.0 + alpha);
+		/* b0 */ coef[0] = alpha * scale;
+		/* b1 */ coef[1] = 0;
+		/* b2 */ coef[2] = (-alpha) * scale;
+		/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
+		/* a2 */ coef[4] = (1.0 - alpha) * scale;
+		setCoefficients(stage, coef);
+	}
+	void setNotch(uint32_t stage, float frequency, float q = 1.0) {
+		int coef[5];
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double sinW0 = sin(w0);
+		double alpha = sinW0 / ((double)q * 2.0);
+		double cosW0 = cos(w0);
+		double scale = 1073741824.0 / (1.0 + alpha);
+		/* b0 */ coef[0] = scale;
+		/* b1 */ coef[1] = (-2.0 * cosW0) * scale;
+		/* b2 */ coef[2] = coef[0];
+		/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
+		/* a2 */ coef[4] = (1.0 - alpha) * scale;
+		setCoefficients(stage, coef);
+	}
+	void setLowShelf(uint32_t stage, float frequency, float gain, float slope = 1.0f) {
+		int coef[5];
 		double a = pow(10.0, gain/40.0);
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double sinW0 = sin(w0);
+		//double alpha = (sinW0 * sqrt((a+1/a)*(1/slope-1)+2) ) / 2.0;
+		double cosW0 = cos(w0);
 		//generate three helper-values (intermediate results):
-		double sinsq = sinW0 * sqrt( (pow(a,2.0)+1.0)*(1.0/q-1.0)+2.0*a );
+		double sinsq = sinW0 * sqrt( (pow(a,2.0)+1.0)*(1.0/slope-1.0)+2.0*a );
 		double aMinus = (a-1.0)*cosW0;
 		double aPlus = (a+1.0)*cosW0;
-		double scaleLow = 1073741824.0 / ( (a+1.0) + aMinus + sinsq);
-		double scaleHigh = 1073741824.0 / ( (a+1.0) - aMinus + sinsq);
-		
-		switch (filtertype) {
-		case 0:
-			/* b0 */ coef[0] = ((1.0 - cosW0) / 2.0) * scale;
-			/* b1 */ coef[1] = (1.0 - cosW0) * scale;
-			/* b2 */ coef[2] = coef[0];
-			/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
-			/* a2 */ coef[4] = (1.0 - alpha) * scale;
-		break;
-		case 1:
-			/* b0 */ coef[0] = ((1.0 + cosW0) / 2.0) * scale;
-			/* b1 */ coef[1] = -(1.0 + cosW0) * scale;
-			/* b2 */ coef[2] = coef[0];
-			/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
-			/* a2 */ coef[4] = (1.0 - alpha) * scale;
-		break;
-		case 2:
-			/* b0 */ coef[0] = alpha * scale;
-			/* b1 */ coef[1] = 0;
-			/* b2 */ coef[2] = (-alpha) * scale;
-			/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
-			/* a2 */ coef[4] = (1.0 - alpha) * scale;
-		break;
-		case 3:
-			/* b0 */ coef[0] = scale;
-			/* b1 */ coef[1] = (-2.0 * cosW0) * scale;
-			/* b2 */ coef[2] = coef[0];
-			/* a1 */ coef[3] = (-2.0 * cosW0) * scale;
-			/* a2 */ coef[4] = (1.0 - alpha) * scale;
-		break;
-		case 5:
-			/* b0 */ coef[0] =		a *	( (a+1.0) - aMinus + sinsq	) * scaleLow;
-			/* b1 */ coef[1] =  2.0*a * ( (a-1.0) - aPlus  			) * scaleLow;
-			/* b2 */ coef[2] =		a * ( (a+1.0) - aMinus - sinsq 	) * scaleLow;
-			/* a1 */ coef[3] = -2.0*	( (a-1.0) + aPlus			) * scaleLow;
-			/* a2 */ coef[4] =  		( (a+1.0) + aMinus - sinsq	) * scaleLow;
-			break;
-		case 6:
-			/* b0 */ coef[0] =		a *	( (a+1.0) + aMinus + sinsq	) * scaleHigh;
-			/* b1 */ coef[1] = -2.0*a * ( (a-1.0) + aPlus  			) * scaleHigh;
-			/* b2 */ coef[2] =		a * ( (a+1.0) + aMinus - sinsq 	) * scaleHigh;
-			/* a1 */ coef[3] =  2.0*	( (a-1.0) - aPlus			) * scaleHigh;
-			/* a2 */ coef[4] =  		( (a+1.0) - aMinus - sinsq	) * scaleHigh;
-				break;
-		default:
-		break;
-		}
+		double scale = 1073741824.0 / ( (a+1.0) + aMinus + sinsq);
+		/* b0 */ coef[0] =		a *	( (a+1.0) - aMinus + sinsq	) * scale;
+		/* b1 */ coef[1] =  2.0*a * ( (a-1.0) - aPlus  			) * scale;
+		/* b2 */ coef[2] =		a * ( (a+1.0) - aMinus - sinsq 	) * scale;
+		/* a1 */ coef[3] = -2.0*	( (a-1.0) + aPlus			) * scale;
+		/* a2 */ coef[4] =  		( (a+1.0) + aMinus - sinsq	) * scale;
+		setCoefficients(stage, coef);
+	}
+	void setHighShelf(uint32_t stage, float frequency, float gain, float slope = 1.0f) {
+		int coef[5];
+		double a = pow(10.0, gain/40.0);
+		double w0 = frequency * (2 * 3.141592654 / AUDIO_SAMPLE_RATE_EXACT);
+		double sinW0 = sin(w0);
+		//double alpha = (sinW0 * sqrt((a+1/a)*(1/slope-1)+2) ) / 2.0;
+		double cosW0 = cos(w0);
+		//generate three helper-values (intermediate results):
+		double sinsq = sinW0 * sqrt( (pow(a,2.0)+1.0)*(1.0/slope-1.0)+2.0*a );
+		double aMinus = (a-1.0)*cosW0;
+		double aPlus = (a+1.0)*cosW0;
+		double scale = 1073741824.0 / ( (a+1.0) - aMinus + sinsq);
+		/* b0 */ coef[0] =		a *	( (a+1.0) + aMinus + sinsq	) * scale;
+		/* b1 */ coef[1] = -2.0*a * ( (a-1.0) + aPlus  			) * scale;
+		/* b2 */ coef[2] =		a * ( (a+1.0) + aMinus - sinsq 	) * scale;
+		/* a1 */ coef[3] =  2.0*	( (a-1.0) - aPlus			) * scale;
+		/* a2 */ coef[4] =  		( (a+1.0) - aMinus - sinsq	) * scale;
+		setCoefficients(stage, coef);
 	}
 
 private:
