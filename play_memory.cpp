@@ -31,6 +31,7 @@
 
 void AudioPlayMemory::play(const unsigned int *data)
 {
+__disable_irq();
 	uint32_t format;
 
 	playing = 0;
@@ -38,6 +39,19 @@ void AudioPlayMemory::play(const unsigned int *data)
 	format = *data++;
 	next = data;
 	beginning = data;
+	length = format & 0xFFFFFF;
+	playing = format >> 24;
+		__enable_irq();
+}
+
+
+void AudioPlayMemory::restart()
+{
+	uint32_t format;
+	playing = 0;
+	prior = 0;
+	format = *beginning++;
+	next = beginning;	
 	length = format & 0xFFFFFF;
 	playing = format >> 24;
 }

@@ -36,6 +36,7 @@ public:
 	AudioPlayMemory(void) : AudioStream(0, NULL), playing(0) { }
 	void play(const unsigned int *data);
 	void stop(void);
+	void restart(void);
 	bool isPlaying(void) { return playing; }
 	uint32_t positionMillis(void);
 	uint32_t lengthMillis(void);
